@@ -1,15 +1,13 @@
 import unittest
+from itertools import islice
 
-from download import get_posts
-
-import requests_cache
-requests_cache.install_cache('test_cache')
+from download import get_posts, generate_epub
 
 
 class TestGetFeedIndex(unittest.TestCase):
 
     def test_get_posts(self):
-        posts = [post for post in get_posts()]
+        posts = list(get_posts())
 
         self.assertGreater(len(posts), 460)
 
@@ -20,6 +18,13 @@ class TestGetFeedIndex(unittest.TestCase):
         post = posts[425]
         self.assertEqual(post.title, 'Mr. Frugal Toque on Mortgage Freedom'),
         self.assertEqual(post.author, 'Mr. Frugal Toque')
+
+    def test_generate_epub(self):
+        # Get first 3 posts as sample
+        posts = list(islice(get_posts(), 3))
+        generate_epub(posts)
+
+        # how the hell do I test this cleanly???
 
 
 if __name__ == '__main__':

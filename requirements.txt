@@ -1,2 +1,6 @@
-feedparser
-requests
+EbookLib==0.15
+beautifulsoup4==4.5.1
+feedparser==5.2.1
+lxml==3.6.1
+requests==2.10.0
+requests-cache==0.4.12
