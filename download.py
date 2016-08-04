@@ -12,7 +12,9 @@ requests_cache.install_cache('cache')
 
 
 FEED_INDEX = 'http://www.mrmoneymustache.com/feed/?order=ASC&paged=%d'
-DIST_DIR = 'dist'
+DIST_PATH = 'dist'
+IMG_DIR = 'img'
+IMG_PATH = os.path.join(DIST_PATH, IMG_DIR)
 
 Post = namedtuple('Post', ['title', 'author', 'content'])
 
@@ -39,8 +41,27 @@ def get_posts():
 
 def replace_images(post_content):
     '''Download images in post to local filesystem, replace src attribute'''
+
     soup = BeautifulSoup(post_content, 'lxml')
-    # TODO
+
+    for img_tag in soup.find_all('img'):
+
+        # Download
+        url = img_tag['src']
+        if not url.startswith('http'):
+            continue
+        print('--- Downloading', url)
+        filename = url.split('/')[-1]
+        filepath = os.path.join(IMG_PATH, filename)
+        if not os.path.isfile(filepath):
+            resp = requests.get(url)
+            if resp.status_code == 200:
+                with open(filepath, 'wb') as f:
+                    f.write(resp.content)
+
+        # Rewrite
+        img_tag['src'] = os.path.join('.', IMG_DIR, filename)
+
     return str(soup)
 
 
@@ -76,11 +97,14 @@ def generate_epub(posts):
     book.spine = spine_list
 
     # write to the file
-    epub.write_epub(os.path.join(DIST_DIR, 'mmm.epub'), book, {})
+    epub.write_epub(os.path.join(DIST_PATH, 'mmm.epub'), book, {})
 
 
 if __name__ == '__main__':
-    if not os.path.isdir(DIST_DIR):
-        os.mkdir(DIST_DIR)
+    if not os.path.isdir(DIST_PATH):
+        os.mkdir(DIST_PATH)
+
+    if not os.path.isdir(IMG_PATH):
+        os.mkdir(IMG_PATH)
 
     generate_epub(get_posts())
